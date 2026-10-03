@@ -1,0 +1,25 @@
+{
+  "base_model": "airesearch/wangchanberta-base-att-spm-uncased",
+  "risk_labels": [
+    "normal",
+    "scam",
+    "suspicious"
+  ],
+  "categories": [
+    "delivery",
+    "fake_scholarship",
+    "impersonation",
+    "job",
+    "marketplace",
+    "none",
+    "otp",
+    "phishing",
+    "refund",
+    "tu"
+  ],
+  "max_len": 192,
+  "t_red": 0.55,
+  "t_yellow": 0.45,
+  "weights_format": "safetensors",
+  "checkpoint": "checkpoint-390"
+}
