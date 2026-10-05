@@ -12,22 +12,20 @@ KU ScamGuard เป็นบริการ Webhook และ AI Inference Servi
 
 ```text
 Scammer_local/
-├── models/                       # โฟลเดอร์รวมโมเดล (รองรับหลายโมเดลเพื่อเปรียบเทียบ)
-│   ├── wangchanberta/            # 1. โมเดล WangchanBERTa (ค่าเริ่มต้น)
-│   ├── phayathaibert/            # 2. โมเดล PhayaThaiBERT
-│   └── xlm_roberta/              # 3. โมเดล XLM-RoBERTa
-├── train_phayathaibert_colab.ipynb # Colab Notebook สำหรับเทรน PhayaThaiBERT
-├── train_xlm_roberta_colab.ipynb   # Colab Notebook สำหรับเทรน XLM-RoBERTa
+├── models/                           # โฟลเดอร์รวมโมเดล (รองรับหลายโมเดลเพื่อเปรียบเทียบ)
+│   ├── wangchanberta/                # 1. โมเดล WangchanBERTa (ค่าเริ่มต้น)
+│   ├── phayathaibert/                # 2. โมเดล PhayaThaiBERT
+│   └── xlm_roberta/                  # 3. โมเดล XLM-RoBERTa
 ├── KU_ScamGuard_dataset_Rezero2.xlsx # Dataset สำหรับใช้เทรน
-├── app.py                        # Flask Web Server & LINE Webhook Controller
-├── predictor.py                  # Class Inference (ScamGuardPredictor รองรับทุกโมเดล)
-├── flex_messages.py              # เทมเพลต LINE Flex Message สำหรับแจ้งเตือน
-├── tunnel.py                     # Cloudflare Tunnel สำหรับรัน Localhost สู่ Public HTTPS
-├── requirements.txt              # Production Dependencies
-├── .env                          # Configuration & API Keys (Private)
-├── .env.example                  # ตัวอย่างการตั้งค่า Environment Variables
-├── .gitignore                    # Git Ignore rules
-└── README.md                     # คู่มือการใช้งานระบบ
+├── app.py                            # Flask Web Server & LINE Webhook Controller
+├── predictor.py                      # Class Inference (ScamGuardPredictor รองรับทุกโมเดล)
+├── flex_messages.py                  # เทมเพลต LINE Flex Message สำหรับแจ้งเตือน
+├── tunnel.py                         # Cloudflare Tunnel สำหรับรัน Localhost สู่ Public HTTPS
+├── requirements.txt                  # Production Dependencies
+├── .env                              # Configuration & API Keys (Private)
+├── .env.example                      # ตัวอย่างการตั้งค่า Environment Variables
+├── .gitignore                        # Git Ignore rules
+└── README.md                         # คู่มือการใช้งานระบบ
 ```
 
 ---
