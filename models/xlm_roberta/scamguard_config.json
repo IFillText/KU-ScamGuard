@@ -18,7 +18,7 @@
     "tu"
   ],
   "max_len": 192,
-  "t_red": 0.55,
+  "t_red": 0.80,
   "t_yellow": 0.45,
   "weights_format": "safetensors",
   "model_architecture": "XLMRobertaMultiTaskModel"
