@@ -47,11 +47,11 @@ This dataset contains Thai text messages collected from LINE chat groups, social
 
 ---
 
-## 3. Dataset Structure
+## 3. File Structure
 
 ```text
 KU-ScamGuard/
-├── KU_ScamGuard_dataset_Rezero2.xlsx   # Cleaned & balanced dataset (2,999 samples)
+├── KU_ScamGuard_dataset.xlsx           # Cleaned & balanced dataset (2,999 samples)
 ├── models/                             # Pre-trained & Fine-tuned Multi-task Models
 │   ├── phayathaibert/                  # PhayaThaiBERT (Default best model - Macro F1: 0.9891)
 │   ├── wangchanberta/                  # WangchanBERTa (Macro F1: 0.9782)
