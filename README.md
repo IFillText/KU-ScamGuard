@@ -1,98 +1,161 @@
-# KU ScamGuard - Deployment & Tunnel Service
+# README.md
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Framework](https://img.shields.io/badge/Framework-Flask-green.svg)](https://flask.palletsprojects.com/)
-[![Model](https://img.shields.io/badge/Model-WangchanBERTa-orange.svg)](https://huggingface.co/airesearch/wangchanberta-base-att-spm-uncased)
+## KU ScamGuard Dataset & Service
 
-KU ScamGuard เป็นบริการ Webhook และ AI Inference Service สำหรับตรวจจับข้อความหลอกลวง / มิจฉาชีพ (Scam Detection) บน **LINE Messaging API** ขับเคลื่อนด้วยโมเดลภาษาไทย **WangchanBERTa** (Multi-task Classification: Risk Level & Scam Category)
+**Version:** v3.0  
+**Created:** October 2026  
+**Institution:** Kasetsart University, Kamphaeng Saen Campus  
 
 ---
 
-## 📁 โครงสร้างโปรเจกต์ (Clean Deployment Structure)
+## 1. Dataset Description
+
+This dataset contains Thai text messages collected from LINE chat groups, social media platforms, and university student communities for scam message detection and hierarchical risk classification.
+
+* **Number of messages:** 2,999
+* **Number of risk levels:** 3 classes (Normal, Suspicious, Scam)
+* **Number of scam sub-categories:** 10 categories
+* **Language:** Thai (with common English transliterations and abbreviations)
+* **Format:** Excel (`.xlsx`) / Structured Text
+
+---
+
+## 2. Class Labels
+
+### 2.1 Primary Risk Level (Level 1)
+
+| Label | Class | Description | Samples |
+| :---: | :--- | :--- | :---: |
+| 0 | Normal | ข้อความสนทนาทั่วไป ข่าวสาร การสอบถามข้อมูล ไม่มีความเสี่ยง | 999 |
+| 1 | Suspicious | ข้อความน่าสงสัย มีความเสี่ยงปานกลาง (เชิญชวนทำงาน, แจกของ, ให้คลิกลิงก์) | 1,000 |
+| 2 | Scam | ข้อความหลอกลวง มิจฉาชีพชัดเจน (หลอกโอนเงิน, หลอกขอ OTP, ปลอมทุนการศึกษา) | 1,000 |
+
+### 2.2 Scam Sub-Categories (Level 2 - 2,000 Messages)
+
+| Category | Description | Samples |
+| :--- | :--- | :---: |
+| `marketplace` | หลอกขายสินค้าออนไลน์ / สินค้าราคาถูกผิดปกติ / ไม่ส่งของ | 395 |
+| `phishing` | ลิงก์ฟิชชิ่ง ดักขโมยรหัสผ่านหรือข้อมูลส่วนตัว | 275 |
+| `ku` | ข้อความหลอกลวงที่แอบอ้าง ม.เกษตรศาสตร์ / กิจกรรม / ทุนภายใน มก. | 227 |
+| `job` | หลอกทำงานออนไลน์ / รับสมัครงานพาร์ตไทม์รายได้สูง / กดรับออเดอร์ | 227 |
+| `impersonation` | แอบอ้างเป็นบุคคล สถาบัน เจ้าหน้าที่รัฐ หรือองค์กรต่างๆ | 211 |
+| `otp` | ล่อลวงให้บอกรหัส OTP หรือรหัสความปลอดภัยทางการเงิน | 191 |
+| `fake_scholarship` | ทุนการศึกษาปลอม / อ้างสิทธิ์รับทุนแต่ต้องจ่ายค่าธรรมเนียมล่วงหน้า | 189 |
+| `refund` | หลอกคืนเงิน / พัสดุตีกลับ / ขอเคลมเงินภาษีหรือค่าสินค้า | 145 |
+| `delivery` | แอบอ้างบริษัทขนส่ง แจ้งว่ามีพัสดุตกค้างหรือต้องชำระค่าธรรมเนียม | 140 |
+| `none` | ข้อความปกติทั่วไป (Normal) ไม่จัดเป็นกลโกง | 999 |
+
+---
+
+## 3. Dataset Structure
 
 ```text
-Scammer_local/
-├── models/                           # โฟลเดอร์รวมโมเดล (รองรับหลายโมเดลเพื่อเปรียบเทียบ)
-│   ├── wangchanberta/                # 1. โมเดล WangchanBERTa (ค่าเริ่มต้น)
-│   ├── phayathaibert/                # 2. โมเดล PhayaThaiBERT
-│   └── xlm_roberta/                  # 3. โมเดล XLM-RoBERTa
-├── KU_ScamGuard_dataset_Rezero2.xlsx # Dataset สำหรับใช้เทรน
-├── app.py                            # Flask Web Server & LINE Webhook Controller
-├── predictor.py                      # Class Inference (ScamGuardPredictor รองรับทุกโมเดล)
-├── flex_messages.py                  # เทมเพลต LINE Flex Message สำหรับแจ้งเตือน
-├── tunnel.py                         # Cloudflare Tunnel สำหรับรัน Localhost สู่ Public HTTPS
-├── requirements.txt                  # Production Dependencies
-├── .env                              # Configuration & API Keys (Private)
-├── .env.example                      # ตัวอย่างการตั้งค่า Environment Variables
-├── .gitignore                        # Git Ignore rules
-└── README.md                         # คู่มือการใช้งานระบบ
+KU-ScamGuard/
+├── KU_ScamGuard_dataset_Rezero2.xlsx   # Cleaned & balanced dataset (2,999 samples)
+├── models/                             # Pre-trained & Fine-tuned Multi-task Models
+│   ├── phayathaibert/                  # PhayaThaiBERT (Default best model - Macro F1: 0.9891)
+│   ├── wangchanberta/                  # WangchanBERTa (Macro F1: 0.9782)
+│   └── xlm_roberta/                    # XLM-RoBERTa (Macro F1: 0.9803)
+├── app.py                              # Flask Web Server & LINE Webhook Controller
+├── predictor.py                        # Hierarchical Inference Engine & Threshold Manager
+├── flex_messages.py                    # LINE Alert UI Templates (Red / Yellow Card)
+├── tunnel.py                           # Cloudflare Tunnel for Public Webhook
+├── requirements.txt                    # Python Dependencies
+├── .env.example                        # Environment Variable Configuration Template
+└── README.md                           # Dataset & System Documentation
 ```
 
 ---
 
-## 🚀 การติดตั้งและตั้งค่าเริ่มต้น (Getting Started)
+## 4. Data Source
 
-### 1. ติดตั้ง Dependencies
-แนะนำให้สร้างและใช้งาน Virtual Environment (`venv`):
+1. **Initial Open Dataset:** รวบรวมข้อมูลเริ่มต้นจาก Open Dataset (`tu_scam`) จำนวน 2,999 ข้อความ
+2. **Data Cleansing & Deduplication:**
+   * กรองข้อความที่ซ้ำกันทุกประการ (Exact Duplicates): ลบออก 107 ข้อความ
+   * ลดข้อความที่มีแพทเทิร์นใกล้เคียงกันสูง (Near-Duplicates): ลบออก 1,460 ข้อความ เพื่อป้องกัน Data Leakage และลด Overfitting (เหลือ 1,432 ข้อความ)
+3. **Data Augmentation & New Collection:**
+   * เพิ่มชุดข้อมูลข้อความใหม่ที่เกิดขึ้นจริงในกลุ่ม LINE และสังคมมหาวิทยาลัยเกษตรศาสตร์ จำนวน 1,567 ข้อความ
+4. **Final Balanced Dataset:** รวมเป็นชุดข้อมูล Final Dataset v3 ทั้งหมด **2,999 ข้อความ** มีความสมดุลทุกคลาส (Scam 1,000 / Suspicious 1,000 / Normal 999)
+
+---
+
+## 5. Annotation
+
+* ทำการตรวจสอบและจำแนกประเภท (Labeling) แบบ **Hierarchical 2 Levels** (ระดับความเสี่ยง และ หมวดหมู่กลโกงย่อย)
+* ผ่านการตรวจสอบความถูกต้องโดยกลุ่มผู้พัฒนา **ULTRATHINK++** ตามเกณฑ์การวิเคราะห์กลโกงข้อความทางไซเบอร์ในบริบทภาษาไทย
+
+---
+
+## 6. Recommended Data Split
+
+แบ่งชุดข้อมูลด้วยเทคนิค **Stratified Split (70 / 15 / 15)** เพื่อรักษาสัดส่วนของคลาสให้เท่ากันในทุกชุด:
+
+| Subset | Percentage | Scam | Suspicious | Normal | Total |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Training** | 69.4% (~70%) | 695 | 689 | 696 | **2,080** |
+| **Validation** | 15.3% (~15%) | 151 | 157 | 152 | **460** |
+| **Testing** | 15.3% (~15%) | 154 | 154 | 151 | **459** |
+| **Total** | **100%** | **1,000** | **1,000** | **999** | **2,999** |
+
+---
+
+## 7. Version History
+
+| Version | Description |
+| :---: | :--- |
+| **v1.0** | ชุดข้อมูลดิบตั้งต้นจากแหล่งรวบรวมสาธารณะ (tu_scam raw collection) |
+| **v2.0** | ทำ Data Cleansing โดยตัดข้อความซ้ำ (-107) และกรองข้อความ Near-duplicates (-1,460) |
+| **v3.0** | เพิ่มข้อความเฉพาะกลุ่มนิสิตและมิจฉาชีพยุคใหม่ (+1,567), ปรับสมดุลข้อมูล 3 คลาส (1,000/1,000/999) และจัดทำ 10 Scam Categories |
+
+---
+
+## 8. Deployment & Running Guide
+
+### 8.1 การติดตั้งสภาพแวดล้อม (Installation)
 ```bash
-# บน Windows
+# สร้างและเปิดใช้งาน venv
 python -m venv venv
 venv\Scripts\activate
 
-# ติดตั้งแพ็กเกจที่จำเป็นสำหรับการ Deploy
+# ติดตั้ง Dependencies
 pip install -r requirements.txt
 ```
 
-### 2. ตั้งค่า Environment Variables
-คัดลอกไฟล์ `.env.example` เป็น `.env` แล้วระบุค่า Token จาก [LINE Developers Console](https://developers.line.biz/):
+### 8.2 การตั้งค่า (.env)
+คัดลอกไฟล์ `.env.example` เป็น `.env` และกรอก Channel Secret / Access Token:
 ```env
-LINE_CHANNEL_ACCESS_TOKEN=your_channel_access_token_here
-LINE_CHANNEL_SECRET=your_channel_secret_here
+LINE_CHANNEL_ACCESS_TOKEN=your_token_here
+LINE_CHANNEL_SECRET=your_secret_here
 PORT=5000
-MODEL_DIR=models/wangchanberta
+MODEL_DIR=models/phayathaibert
 ```
-> **Tip การสลับโมเดลเพื่อเปรียบเทียบ:** สามารถเปลี่ยนค่า `MODEL_DIR` ใน `.env` เป็นโฟลเดอร์โมเดลอื่น เช่น `MODEL_DIR=models/another_model` เพื่อสลับไปใช้งานโมเดลใหม่ได้ทันทีโดยไม่ต้องแก้โค้ด!
 
----
-
-## 💻 วิธีการรันระบบ (Running the Services)
-
-### 1. รันเซิร์ฟเวอร์ AI Webhook (`app.py`)
+### 8.3 การรันระบบ (Server & Tunnel)
 ```bash
+# Terminal 1: รัน AI Webhook Server
 python app.py
-```
-* เซิร์ฟเวอร์จะเริ่มต้นทำงานที่พอร์ต `5000` (หรือพอร์ตที่ระบุใน `.env`)
-* ตรวจสอบสถานะการทำงานได้ที่: `http://localhost:5000/`
 
-### 2. รัน Public Tunnel (`tunnel.py`)
-เปิดอีกหนึ่ง Terminal เพื่อสร้าง Public HTTPS URL สำหรับเชื่อมต่อกับ LINE Webhook:
-```bash
+# Terminal 2: รัน Cloudflare Tunnel สำหรับเชื่อมต่อ LINE Developers Webhook
 python tunnel.py
 ```
-* ระบบจะแสดง **Public Tunnel URL** เช่น `https://xxxx-xxxx-xxxx.trycloudflare.com`
-* นำ URL นี้ไปต่อท้ายด้วย `/callback` แล้วนำไปใส่ใน **Webhook URL** ใน LINE Developers Console:
-  ```
-  https://xxxx-xxxx-xxxx.trycloudflare.com/callback
-  ```
-* กด **Verify** และเปิดใช้งานสวิตช์ **Use webhook**
+
+* **Hybrid Threshold Spec:**
+  * 🔴 **Red Alert (Scam):** $P(\text{scam}) \ge 0.80$
+  * 🟡 **Yellow Alert (Suspicious):** $0.45 \le P(\text{suspicious}) < 0.80$
+  * ⚪ **Normal:** โหมดเงียบในกลุ่ม (Silent) / แจ้งปลอดภัยในการคุยเดี่ยว
 
 ---
 
-## 📡 Endpoints
+## 9. Contact
 
-| Method | Endpoint | รายละเอียด |
-| :--- | :--- | :--- |
-| `GET` | `/` | Health check endpoint แสดงสถานะเซิร์ฟเวอร์และอุปกรณ์คำนวณ (CUDA / CPU) |
-| `POST` | `/callback` | LINE Webhook endpoint รับข้อความและส่งการแจ้งเตือนกลับอัตโนมัติ |
+**Project Team:** ULTRATHINK++  
+Department of Computer Engineering, Faculty of Engineering at Kamphaeng Saen,  
+Kasetsart University, Kamphaeng Saen Campus, Nakhon Pathom, Thailand  
 
----
-
-## 🧠 สถาปัตยกรรมโมเดล (Model Architecture)
-* **Base Model:** `airesearch/wangchanberta-base-att-spm-uncased`
-* **Tasks:**
-  1. **Risk Level Classifier:** Normal, Scam, Suspicious
-  2. **Category Classifier:** Delivery, Fake Scholarship, Impersonation, Job, Marketplace, None, OTP, Phishing, Refund, TU
-* **Thresholds:**
-  * Red Alert (Scam): $P(\text{scam}) \ge 0.55$
-  * Yellow Alert (Suspicious): $P(\text{suspicious}) \ge 0.45$
-  * Normal: Silent Mode เมื่ออยู่ในแชตกลุ่ม / แจ้งปลอดภัยเมื่อคุยส่วนตัว
+**Advisor & Lab:**  
+Dr. Seksan Mathulaprangsan  
+Pattern REcognition and Computational InTElligence Laboratory (PRECITE Lab),  
+Department of Computer Engineering, Faculty of Engineering at Kamphaeng Saen,  
+Kasetsart University, Thailand  
+E-mail: seksan.m@ku.th  
+GitHub Repository: [IFillText/KU-ScamGuard](https://github.com/IFillText/KU-ScamGuard)
